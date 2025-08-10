@@ -96,7 +96,53 @@ func (c *PocketBaseClient) SaveServerMetrics(server ServerRecord) error {
 }
 
 func (c *PocketBaseClient) UpdateServerStatus(recordID string, server ServerRecord) error {
-	jsonData, err := json.Marshal(server)
+	// First, get the current server record to preserve notification fields
+	getURL := fmt.Sprintf("%s/api/collections/servers/records/%s", c.baseURL, recordID)
+	getResp, err := c.httpClient.Get(getURL)
+	if err != nil {
+		return fmt.Errorf("failed to get current server record: %v", err)
+	}
+	defer getResp.Body.Close()
+
+	if getResp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to get server record, status: %d", getResp.StatusCode)
+	}
+
+	var currentServer map[string]interface{}
+	if err := json.NewDecoder(getResp.Body).Decode(&currentServer); err != nil {
+		return fmt.Errorf("failed to decode current server record: %v", err)
+	}
+
+	// Create update payload preserving notification fields
+	updateData := map[string]interface{}{
+		"status":           server.Status,
+		"uptime":          server.Uptime,
+		"ram_total":       server.RAMTotal,
+		"ram_used":        server.RAMUsed,
+		"cpu_cores":       server.CPUCores,
+		"cpu_usage":       server.CPUUsage,
+		"disk_total":      server.DiskTotal,
+		"disk_used":       server.DiskUsed,
+		"last_checked":    server.LastChecked.Time.Format(time.RFC3339),
+		"connection":      server.Connection,
+		"system_info":     server.SystemInfo,
+		"timestamp":       server.Timestamp,
+		"check_interval":  server.CheckInterval,
+		"agent_status":    "running", // Set agent status to running when updating
+	}
+
+	// Preserve notification fields if they exist in the current record
+	if notificationID, exists := currentServer["notification_id"]; exists && notificationID != nil && notificationID != "" {
+		updateData["notification_id"] = notificationID
+	}
+	if templateID, exists := currentServer["template_id"]; exists && templateID != nil && templateID != "" {
+		updateData["template_id"] = templateID
+	}
+	if notificationStatus, exists := currentServer["notification_status"]; exists && notificationStatus != nil {
+		updateData["notification_status"] = notificationStatus
+	}
+
+	jsonData, err := json.Marshal(updateData)
 	if err != nil {
 		return fmt.Errorf("failed to marshal server record: %v", err)
 	}
@@ -151,9 +197,37 @@ func (c *PocketBaseClient) UpdateAgentStatus(status AgentStatusRecord) error {
 		return fmt.Errorf("failed to find server record: %v", err)
 	}
 
-	// Update only the agent_status field in the server record
+	// First, get the current server record to preserve notification fields
+	getURL := fmt.Sprintf("%s/api/collections/servers/records/%s", c.baseURL, server.ID)
+	getResp, err := c.httpClient.Get(getURL)
+	if err != nil {
+		return fmt.Errorf("failed to get current server record: %v", err)
+	}
+	defer getResp.Body.Close()
+
+	if getResp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to get server record, status: %d", getResp.StatusCode)
+	}
+
+	var currentServer map[string]interface{}
+	if err := json.NewDecoder(getResp.Body).Decode(&currentServer); err != nil {
+		return fmt.Errorf("failed to decode current server record: %v", err)
+	}
+
+	// Update only the agent_status field while preserving notification fields
 	updateData := map[string]interface{}{
 		"agent_status": status.Status,
+	}
+
+	// Preserve notification fields if they exist
+	if notificationID, exists := currentServer["notification_id"]; exists && notificationID != nil && notificationID != "" {
+		updateData["notification_id"] = notificationID
+	}
+	if templateID, exists := currentServer["template_id"]; exists && templateID != nil && templateID != "" {
+		updateData["template_id"] = templateID
+	}
+	if notificationStatus, exists := currentServer["notification_status"]; exists && notificationStatus != nil {
+		updateData["notification_status"] = notificationStatus
 	}
 
 	jsonData, err := json.Marshal(updateData)
