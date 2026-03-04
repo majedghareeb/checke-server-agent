@@ -47,7 +47,7 @@ deb: build
 	cp packaging/monitoring-agent.service dist/$(NAME)-$(ARCH)/etc/systemd/system/
 	
 	# Copy configuration files
-	cp packaging/monitoring-agent.env dist/$(NAME)-$(ARCH)/etc/$(NAME)/
+	cp packaging/monitoring-agent.conf dist/$(NAME)-$(ARCH)/etc/$(NAME)/monitoring-agent.env
 	cp .env.example dist/$(NAME)-$(ARCH)/etc/$(NAME)/monitoring-agent.env.example
 	
 	# Copy package control files with architecture substitution
@@ -79,7 +79,7 @@ rpm: build
 	# Copy files to build directory
 	cp bin/$(NAME)-$(ARCH) rpmbuild/BUILD/$(NAME)-$(VERSION)-$(ARCH)/$(NAME)
 	cp packaging/monitoring-agent.service rpmbuild/BUILD/$(NAME)-$(VERSION)-$(ARCH)/
-	cp packaging/monitoring-agent.env rpmbuild/BUILD/$(NAME)-$(VERSION)-$(ARCH)/
+	cp packaging/monitoring-agent.conf rpmbuild/BUILD/$(NAME)-$(VERSION)-$(ARCH)/monitoring-agent.env
 	cp .env.example rpmbuild/BUILD/$(NAME)-$(VERSION)-$(ARCH)/monitoring-agent.env.example
 	
 	# Set RPM architecture
