@@ -44,21 +44,36 @@ sudo ./quick-install.sh
 
 ### Method 3: Manual Installation
 
-1. **Install the package:**
+1. **Automated script (recommended for Method 3):**
    ```bash
-   sudo dpkg -i dist/monitoring-agent.deb
+   ./manual-install.sh \
+     --set SERVER_TOKEN=your-unique-server-token \
+     --set POCKETBASE_URL=http://your-pocketbase-server:8090
+   ```
+
+2. **Manual commands (equivalent):**
+   ```bash
+   make deb
+   sudo dpkg -i dist/monitoring-agent_1.0.0_amd64.deb
    sudo apt-get install -f  # Fix dependencies if needed
-   ```
-
-2. **Configure the agent:**
-   ```bash
    sudo nano /etc/monitoring-agent/monitoring-agent.env
-   ```
-
-3. **Start the service:**
-   ```bash
    sudo systemctl enable monitoring-agent
    sudo systemctl start monitoring-agent
+   ```
+
+3. **Set env variables during installation:**
+   ```bash
+   SERVER_TOKEN=your-unique-server-token \
+   POCKETBASE_URL=http://your-pocketbase-server:8090 \
+   ./manual-install.sh
+   ```
+   Or pass repeatable `--set KEY=VALUE` flags:
+   ```bash
+   ./manual-install.sh \
+     --set SERVER_TOKEN=your-unique-server-token \
+     --set POCKETBASE_URL=http://your-pocketbase-server:8090 \
+     --set SERVER_NAME=prod-server-1 \
+     --set MONITORING_DISK_PATH=/hostfs
    ```
 
 ## Configuration
