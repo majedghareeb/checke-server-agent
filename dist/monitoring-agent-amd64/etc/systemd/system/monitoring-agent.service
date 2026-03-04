@@ -1,0 +1,43 @@
+
+[Unit]
+Description=CheckCle Server Monitoring Agent
+Documentation=https://github.com/operacle/checkcle-server-agent
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=monitoring-agent
+Group=monitoring-agent
+# Add docker group for Docker monitoring access
+SupplementaryGroups=docker
+ExecStart=/usr/bin/monitoring-agent
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RemoveIPC=yes
+RestrictRealtime=yes
+
+# Allow access to system information and configuration
+ReadWritePaths=/var/log/monitoring-agent
+ReadOnlyPaths=/proc /sys /etc/monitoring-agent
+
+# Network access
+PrivateNetwork=no
+
+# Environment
+EnvironmentFile=/etc/monitoring-agent/monitoring-agent.env
+WorkingDirectory=/var/lib/monitoring-agent
+
+[Install]
+WantedBy=multi-user.target
