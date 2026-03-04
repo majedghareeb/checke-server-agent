@@ -208,12 +208,7 @@ func (sc *SystemCollector) getContainerStats(containerID, containerName, status,
 		stats.MemUsage = 0
 		stats.MemTotal = 1024 * 1024 * 1024 // 1GB default
 		stats.DiskUsage = 0
-		_, totalSpace, _ := sc.getDiskUsage()
-		if totalSpace > 0 {
-			stats.DiskTotal = totalSpace
-		} else {
-			stats.DiskTotal = 10 * 1024 * 1024 * 1024 // 10GB default
-		}
+		stats.DiskTotal = sc.getContainerDiskTotal(containerID)
 		return stats
 	}
 
@@ -248,12 +243,7 @@ func (sc *SystemCollector) getContainerStats(containerID, containerName, status,
 		stats.MemUsage = 512 * 1024 * 1024 // 512MB default
 		stats.MemTotal = 2 * 1024 * 1024 * 1024 // 2GB default
 		stats.DiskUsage = 1024 * 1024 * 1024 // 1GB default
-		_, totalSpace, _ := sc.getDiskUsage()
-		if totalSpace > 0 {
-			stats.DiskTotal = totalSpace
-		} else {
-			stats.DiskTotal = 10 * 1024 * 1024 * 1024 // 10GB default
-		}
+		stats.DiskTotal = sc.getContainerDiskTotal(containerID)
 		return stats
 	}
 
@@ -398,8 +388,7 @@ func (sc *SystemCollector) getContainerDiskTotal(containerID string) int64 {
 	if total > 0 {
 		return total
 	}
-	
-	// Fallback: return default size
-	defaultSize := int64(10 * 1024 * 1024 * 1024) // Default 10GB
-	return defaultSize
+
+	// Unknown/unavailable total.
+	return 0
 }
