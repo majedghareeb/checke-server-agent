@@ -208,7 +208,7 @@ func (sc *SystemCollector) getContainerStats(containerID, containerName, status,
 		stats.MemUsage = 0
 		stats.MemTotal = 1024 * 1024 * 1024 // 1GB default
 		stats.DiskUsage = 0
-		stats.DiskTotal = sc.getContainerDiskTotal(containerID)
+		stats.DiskTotal = sc.getContainerDiskTotal()
 		return stats
 	}
 
@@ -243,7 +243,7 @@ func (sc *SystemCollector) getContainerStats(containerID, containerName, status,
 		stats.MemUsage = 512 * 1024 * 1024 // 512MB default
 		stats.MemTotal = 2 * 1024 * 1024 * 1024 // 2GB default
 		stats.DiskUsage = 1024 * 1024 * 1024 // 1GB default
-		stats.DiskTotal = sc.getContainerDiskTotal(containerID)
+		stats.DiskTotal = sc.getContainerDiskTotal()
 		return stats
 	}
 
@@ -274,7 +274,7 @@ func (sc *SystemCollector) getContainerStats(containerID, containerName, status,
 		blockIO := strings.TrimSpace(fields[3])
 		diskRead, diskWrite := sc.parseBlockIO(blockIO)
 		stats.DiskUsage = diskRead + diskWrite
-		stats.DiskTotal = sc.getContainerDiskTotal(containerID)
+		stats.DiskTotal = sc.getContainerDiskTotal()
 	}
 
 	// Calculate network speeds (simplified - bytes per second estimate)
@@ -383,7 +383,7 @@ func (sc *SystemCollector) parseDataSize(sizeStr string) int64 {
 }
 
 // getContainerDiskTotal gets container disk total
-func (sc *SystemCollector) getContainerDiskTotal(containerID string) int64 {
+func (sc *SystemCollector) getContainerDiskTotal() int64 {
 	_, total, _ := sc.getDiskUsage()
 	if total > 0 {
 		return total
