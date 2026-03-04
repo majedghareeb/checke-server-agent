@@ -208,7 +208,12 @@ func (sc *SystemCollector) getContainerStats(containerID, containerName, status,
 		stats.MemUsage = 0
 		stats.MemTotal = 1024 * 1024 * 1024 // 1GB default
 		stats.DiskUsage = 0
-		stats.DiskTotal = 10 * 1024 * 1024 * 1024 // 10GB default
+		_, totalSpace, _ := sc.getDiskUsage()
+		if totalSpace > 0 {
+			stats.DiskTotal = totalSpace
+		} else {
+			stats.DiskTotal = 10 * 1024 * 1024 * 1024 // 10GB default
+		}
 		return stats
 	}
 
@@ -243,7 +248,12 @@ func (sc *SystemCollector) getContainerStats(containerID, containerName, status,
 		stats.MemUsage = 512 * 1024 * 1024 // 512MB default
 		stats.MemTotal = 2 * 1024 * 1024 * 1024 // 2GB default
 		stats.DiskUsage = 1024 * 1024 * 1024 // 1GB default
-		stats.DiskTotal = 10 * 1024 * 1024 * 1024 // 10GB default
+		_, totalSpace, _ := sc.getDiskUsage()
+		if totalSpace > 0 {
+			stats.DiskTotal = totalSpace
+		} else {
+			stats.DiskTotal = 10 * 1024 * 1024 * 1024 // 10GB default
+		}
 		return stats
 	}
 
@@ -382,31 +392,11 @@ func (sc *SystemCollector) parseDataSize(sizeStr string) int64 {
 	return result
 }
 
-// getContainerDiskTotal gets container disk total using docker system df
+// getContainerDiskTotal gets container disk total
 func (sc *SystemCollector) getContainerDiskTotal(containerID string) int64 {
-	dockerPaths := []string{
-		"/usr/bin/docker",
-		"/usr/local/bin/docker",
-		"/bin/docker",
-		"docker",
-	}
-	
-	// Try docker inspect first
-	for _, dockerPath := range dockerPaths {
-		cmd := exec.Command(dockerPath, "inspect", "--format", "{{.SizeRootFs}}", containerID)
-		cmd.Env = append(os.Environ(),
-			"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-		)
-		
-		output, err := cmd.Output()
-		if err == nil {
-			sizeStr := strings.TrimSpace(string(output))
-			if size, err := strconv.ParseInt(sizeStr, 10, 64); err == nil && size > 0 {
-				// Add some buffer for container filesystem
-				totalSize := size + (2 * 1024 * 1024 * 1024) // Add 2GB buffer
-				return totalSize
-			}
-		}
+	_, total, _ := sc.getDiskUsage()
+	if total > 0 {
+		return total
 	}
 	
 	// Fallback: return default size
